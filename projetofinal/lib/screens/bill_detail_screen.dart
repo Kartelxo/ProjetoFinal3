@@ -164,6 +164,19 @@ class BillDetailScreen extends ConsumerWidget {
                   Person person = bill.people[index];
                   return ListTile(
                     title: Text(person.name),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        // remove person
+                        final updatedPeople = [...bill.people]..removeAt(index);
+                        final updatedBill = Bill(
+                          name: bill.name,
+                          people: updatedPeople,
+                          products: bill.products,
+                        );
+                        ref.read(billsProvider.notifier).updateBill(billIndex, updatedBill);
+                      },
+                    ),
                   );
                 },
               ),
@@ -179,6 +192,18 @@ class BillDetailScreen extends ConsumerWidget {
                   return ListTile(
                     title: Text(product.name),
                     subtitle: Text('Preço: ${product.price}, Quantidade: ${product.quantity}'),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete_outline, color: Colors.red),
+                      onPressed: () {
+                        final updatedProducts = [...bill.products]..removeAt(index);
+                        final updatedBill = Bill(
+                          name: bill.name,
+                          people: bill.people,
+                          products: updatedProducts,
+                        );
+                        ref.read(billsProvider.notifier).updateBill(billIndex, updatedBill);
+                      },
+                    ),
                   );
                 },
               ),
