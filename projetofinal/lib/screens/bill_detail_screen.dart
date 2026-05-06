@@ -16,9 +16,7 @@ class BillDetailScreen extends ConsumerWidget {
     final bill = ref.watch(billsProvider)[billIndex];
 
     final personNameController = TextEditingController();
-    final personIdController = TextEditingController();
     final productNameController = TextEditingController();
-    final productIdController = TextEditingController();
     final productPriceController = TextEditingController();
     final productQuantityController = TextEditingController();
 
@@ -35,10 +33,6 @@ class BillDetailScreen extends ConsumerWidget {
                   controller: personNameController,
                   decoration: InputDecoration(labelText: 'Nome da Pessoa'),
                 ),
-                TextField(
-                  controller: personIdController,
-                  decoration: InputDecoration(labelText: 'ID da Pessoa'),
-                ),
               ],
             ),
             actions: [
@@ -49,9 +43,8 @@ class BillDetailScreen extends ConsumerWidget {
               TextButton(
                 onPressed: () {
                   String name = personNameController.text.trim();
-                  String id = personIdController.text.trim();
-                  if (name.isNotEmpty && id.isNotEmpty) {
-                    Person person = Person(name: name, id: id);
+                  if (name.isNotEmpty) {
+                    Person person = Person(name: name);
                     Bill updatedBill = Bill(
                       name: bill.name,
                       people: [...bill.people, person],
@@ -59,7 +52,6 @@ class BillDetailScreen extends ConsumerWidget {
                     );
                     ref.read(billsProvider.notifier).updateBill(billIndex, updatedBill);
                     personNameController.clear();
-                    personIdController.clear();
                     Navigator.of(context).pop();
                   }
                 },
@@ -85,10 +77,6 @@ class BillDetailScreen extends ConsumerWidget {
                   decoration: InputDecoration(labelText: 'Nome do Produto'),
                 ),
                 TextField(
-                  controller: productIdController,
-                  decoration: InputDecoration(labelText: 'ID do Produto'),
-                ),
-                TextField(
                   controller: productPriceController,
                   decoration: InputDecoration(labelText: 'Preço'),
                   keyboardType: TextInputType.number,
@@ -108,11 +96,10 @@ class BillDetailScreen extends ConsumerWidget {
               TextButton(
                 onPressed: () {
                   String name = productNameController.text.trim();
-                  String id = productIdController.text.trim();
                   double price = double.tryParse(productPriceController.text) ?? 0.0;
                   double quantity = double.tryParse(productQuantityController.text) ?? 0.0;
-                  if (name.isNotEmpty && id.isNotEmpty) {
-                    Product product = Product(name: name, id: id, price: price, quantity: quantity);
+                  if (name.isNotEmpty) {
+                    Product product = Product(name: name, price: price, quantity: quantity);
                     Bill updatedBill = Bill(
                       name: bill.name,
                       people: bill.people,
@@ -120,7 +107,6 @@ class BillDetailScreen extends ConsumerWidget {
                     );
                     ref.read(billsProvider.notifier).updateBill(billIndex, updatedBill);
                     productNameController.clear();
-                    productIdController.clear();
                     productPriceController.clear();
                     productQuantityController.clear();
                     Navigator.of(context).pop();
@@ -148,7 +134,7 @@ class BillDetailScreen extends ConsumerWidget {
                 itemBuilder: (context, index) {
                   Person person = bill.people[index];
                   return ListTile(
-                    title: Text('${person.name} (${person.id})'),
+                    title: Text(person.name),
                   );
                 },
               ),
@@ -162,7 +148,7 @@ class BillDetailScreen extends ConsumerWidget {
                 itemBuilder: (context, index) {
                   Product product = bill.products[index];
                   return ListTile(
-                    title: Text('${product.name} (${product.id})'),
+                    title: Text(product.name),
                     subtitle: Text('Preço: ${product.price}, Quantidade: ${product.quantity}'),
                   );
                 },
