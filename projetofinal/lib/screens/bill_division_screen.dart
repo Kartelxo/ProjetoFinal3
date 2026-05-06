@@ -4,6 +4,8 @@ import '../providers/bill_provider.dart';
 import '../providers/division_provider.dart';
 import '../providers/product_division_config_provider.dart';
 import '../models/product_division_config.dart';
+import '../widgets/appButton.dart';
+import 'result_screen.dart';
 
 class BillDivisionScreen extends ConsumerWidget {
   final int billIndex;
@@ -19,7 +21,9 @@ class BillDivisionScreen extends ConsumerWidget {
     final personTotals = ref.watch(personTotalsProvider)(bill);
 
     return Scaffold(
-      appBar: AppBar(title: Text('Divisão da Conta - ${bill.name}')),
+      appBar: AppBar(
+        title: Text('Divisão da Conta - ${bill.name}'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -167,6 +171,20 @@ class BillDivisionScreen extends ConsumerWidget {
               ...personTotals.entries.map((e) {
                 return ListTile(title: Text(e.key), trailing: Text('€ ${e.value.toStringAsFixed(2)}'));
               }).toList(),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: AppButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => ResultScreen(billIndex: billIndex)),
+                    );
+                  },
+                  label: 'Confirmar e Ver Resumo',
+                  icon: Icons.check_circle_outline,
+                  color: Colors.green,
+                ),
+              ),
             ],
           ),
         ),
