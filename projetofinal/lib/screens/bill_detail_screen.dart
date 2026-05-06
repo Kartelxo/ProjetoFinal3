@@ -179,6 +179,33 @@ class BillDetailScreen extends ConsumerWidget {
               ),
             ),
             AppButton(onPressed: addProduct, label: 'Adicionar Produto'),
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: AppButton(
+                onPressed: () {
+                  // Validação global da conta (2+ pessoas, 1+ produto, valores > 0)
+                  final validateBill = ref.read(billValidatorProvider);
+                  final error = validateBill(bill);
+
+                  if (error == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Conta validada com sucesso!'), backgroundColor: Colors.green),
+                    );
+                    // TODO: Navegar para o ecrã de resultados/divisão de despesas
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(error), backgroundColor: Colors.red),
+                    );
+                  }
+                },
+                label: 'Finalizar e Calcular',
+                icon: Icons.check_circle_outline,
+                color: Colors.green,
+              ),
+            ),
           ],
         ),
       ),
