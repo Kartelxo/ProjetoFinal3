@@ -42,34 +42,45 @@ class Screen1 extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text('Contas de Compras')),
       body: bills.isEmpty
-          ? Center(child: Text('Nenhuma conta de compra adicionada ainda.'))
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey.shade400),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Nenhuma conta adicionada ainda.',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+                  ),
+                ],
+              ),
+            )
           : ListView.separated(
-                  itemCount: bills.length,
-                  separatorBuilder: (_, __) => Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    Bill bill = bills[index];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-                      child: Card(
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(8),
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => BillDetailScreen(billIndex: index))),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-                            child: Row(
-                              children: [
-                                Expanded(child: Text(bill.name, style: TextStyle(fontSize: 16))),
-                                Icon(Icons.chevron_right, color: Colors.grey),
-                              ],
-                            ),
-                          ),
-                        ),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              itemCount: bills.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 4),
+              itemBuilder: (context, index) {
+                Bill bill = bills[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                  child: Card(
+                    elevation: 1,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.blue.shade100,
+                        child: Icon(Icons.description, color: Colors.blue.shade800),
                       ),
-                    );
-                  },
-                ),
+                      title: Text(bill.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+                      subtitle: Text('${bill.people.length} pessoas • ${bill.products.length} produtos'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => BillDetailScreen(billIndex: index))),
+                    ),
+                  ),
+                );
+              },
+            ),
       floatingActionButton: FloatingActionButton.extended(onPressed: addBill, label: Text('Nova Conta'), icon: Icon(Icons.add)),
     );
   }

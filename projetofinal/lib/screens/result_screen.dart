@@ -22,17 +22,17 @@ class ResultScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Card(
-              color: Colors.blue.shade50,
+              color: Colors.blue.shade600,
               elevation: 2,
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Conta Final', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
+                    const Text('Total da Conta', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.white)),
                     Text(
                       '€ ${total.toStringAsFixed(2)}',
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue),
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                   ],
                 ),
@@ -42,10 +42,11 @@ class ResultScreen extends ConsumerWidget {
             const Text('Totais por Pessoa', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const Divider(),
             ...ref.watch(personTotalsProvider)(bill).entries.map((e) => ListTile(
+                  leading: const CircleAvatar(child: Icon(Icons.person, size: 20)),
                   title: Text(e.key),
                   trailing: Text(
                     '€ ${e.value.toStringAsFixed(2)}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green),
                   ),
                 )),
             const SizedBox(height: 24),
@@ -54,7 +55,7 @@ class ResultScreen extends ConsumerWidget {
             ...ref.watch(productDivisionProvider)(bill).map((p) => Card(
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   child: ListTile(
-                    title: Text(p['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    title: Text(p['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600)),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

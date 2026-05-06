@@ -190,118 +190,114 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(bill.name)),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Pessoas', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            _SectionHeader(title: 'Pessoas', icon: Icons.people, onAdd: addPerson),
             Expanded(
               child: ListView.builder(
                 itemCount: bill.people.length,
                 itemBuilder: (context, index) {
                   Person person = bill.people[index];
-                  return ListTile(
-                    title: Text(person.name),
-                    trailing: IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red),
-                      onPressed: () {
-                        // remove person
-                        final updatedPeople = [...bill.people]..removeAt(index);
-                        final updatedBill = Bill(
-                          name: bill.name,
-                          people: updatedPeople,
-                          products: bill.products,
-                          imagePath: bill.imagePath,
-                        );
-                        ref.read(billsProvider.notifier).updateBill(widget.billIndex, updatedBill);
-                      },
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    child: ListTile(
+                      title: Text(person.name),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
+                        onPressed: () {
+                          final updatedPeople = [...bill.people]..removeAt(index);
+                          final updatedBill = Bill(
+                            name: bill.name,
+                            people: updatedPeople,
+                            products: bill.products,
+                            imagePath: bill.imagePath,
+                          );
+                          ref.read(billsProvider.notifier).updateBill(widget.billIndex, updatedBill);
+                        },
+                      ),
                     ),
                   );
                 },
               ),
             ),
-            AppButton(onPressed: addPerson, label: 'Adicionar Pessoa'),
-            SizedBox(height: 20),
-            Text('Produtos', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            _SectionHeader(title: 'Produtos', icon: Icons.shopping_cart, onAdd: addProduct),
             Expanded(
               child: ListView.builder(
                 itemCount: bill.products.length,
                 itemBuilder: (context, index) {
                   Product product = bill.products[index];
-                  return ListTile(
-                    title: Text(product.name),
-                    subtitle: Text('Preço: ${product.price}, Quantidade: ${product.quantity}'),
-                    trailing: IconButton(
-                      icon: Icon(Icons.delete_outline, color: Colors.red),
-                      onPressed: () {
-                        final updatedProducts = [...bill.products]..removeAt(index);
-                        final updatedBill = Bill(
-                          name: bill.name,
-                          people: bill.people,
-                          products: updatedProducts,
-                          imagePath: bill.imagePath,
-                        );
-                        ref.read(billsProvider.notifier).updateBill(widget.billIndex, updatedBill);
-                      },
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    child: ListTile(
+                      title: Text(product.name, style: const TextStyle(fontWeight: FontWeight.w500)),
+                      subtitle: Text('€ ${product.price.toStringAsFixed(2)} x ${product.quantity}'),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                        onPressed: () {
+                          final updatedProducts = [...bill.products]..removeAt(index);
+                          final updatedBill = Bill(
+                            name: bill.name,
+                            people: bill.people,
+                            products: updatedProducts,
+                            imagePath: bill.imagePath,
+                          );
+                          ref.read(billsProvider.notifier).updateBill(widget.billIndex, updatedBill);
+                        },
+                      ),
                     ),
                   );
                 },
               ),
             ),
-            AppButton(onPressed: addProduct, label: 'Adicionar Produto'),
-            const SizedBox(height: 12),
-            Text('Adicionar recibo(s)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: AppButton(
-                    onPressed: _pickFromGallery,
-                    label: 'Galeria',
-                    icon: Icons.photo_library,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: AppButton(
-                    onPressed: _takePhoto,
-                    label: 'Tirar foto',
-                    icon: Icons.camera_alt,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (bill.imagePath != null) ...[
-              Row(
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: Text('Arquivo: ${bill.imagePath!.split('/').last}')),
-                  TextButton(
-                    onPressed: () async {
-                      // Alterar -> abrir opções: gallery
-                      await _pickFromGallery();
-                    },
-                    child: Text('Alterar'),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      final updatedBill = Bill(
-                        name: bill.name,
-                        people: bill.people,
-                        products: bill.products,
-                        imagePath: null,
-                      );
-                      ref.read(billsProvider.notifier).updateBill(widget.billIndex, updatedBill);
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Recibo apagado')));
-                    },
-                    child: Text('Apagar', style: TextStyle(color: Colors.red)),
-                  ),
+                  const Text('Recibo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  if (bill.imagePath == null)
+                    Row(
+                      children: [
+                        Expanded(child: AppButton(onPressed: _pickFromGallery, label: 'Galeria', icon: Icons.photo_library)),
+                        const SizedBox(width: 8),
+                        Expanded(child: AppButton(onPressed: _takePhoto, label: 'Câmara', icon: Icons.camera_alt)),
+                      ],
+                    )
+                  else
+                    Row(
+                      children: [
+                        const Icon(Icons.check_circle, color: Colors.green),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text('Recibo guardado', style: TextStyle(color: Colors.grey.shade700))),
+                        TextButton(onPressed: _pickFromGallery, child: const Text('Trocar')),
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () {
+                            final updatedBill = Bill(
+                              name: bill.name,
+                              people: bill.people,
+                              products: bill.products,
+                              imagePath: null,
+                            );
+                            ref.read(billsProvider.notifier).updateBill(widget.billIndex, updatedBill);
+                          },
+                        ),
+                      ],
+                    ),
                 ],
               ),
-            ],
+            ),
             const SizedBox(height: 24),
-            const Divider(),
-            const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               child: AppButton(
@@ -330,6 +326,27 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final VoidCallback onAdd;
+
+  const _SectionHeader({required this.title, required this.icon, required this.onAdd});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: Colors.blue.shade700),
+        const SizedBox(width: 8),
+        Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const Spacer(),
+        IconButton(onPressed: onAdd, icon: const Icon(Icons.add_circle), color: Colors.blue),
+      ],
     );
   }
 }
