@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/person.dart';
 import '../models/product.dart';
 import '../models/bill.dart';
@@ -8,21 +9,50 @@ import '../providers/validation_provider.dart'; // Importar o novo provider de v
 import '../providers/bill_provider.dart';
 import 'bill_division_screen.dart'; // Importar o novo ecrã
 
-class BillDetailScreen extends ConsumerWidget {
+class BillDetailScreen extends ConsumerStatefulWidget {
   final int billIndex;
 
   const BillDetailScreen({required this.billIndex});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final bill = ref.watch(billsProvider)[billIndex];
+  ConsumerState<BillDetailScreen> createState() => _BillDetailScreenState();
+}
+
+class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
+  XFile? _selectedImage;
+
+  @override
+  Widget build(BuildContext context) {
+    final ref = this.ref;
+  final bill = ref.watch(billsProvider)[widget.billIndex];
 
     final personNameController = TextEditingController();
     final productNameController = TextEditingController();
     final productPriceController = TextEditingController();
     final productQuantityController = TextEditingController();
+    final ImagePicker _picker = ImagePicker();
 
-    void addPerson() {
+    Future<void> _pickFromGallery() async {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        setState(() {
+          _selectedImage = image;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Imagem selecionada: ${image.name}')));
+      }
+    }
+
+    Future<void> _takePhoto() async {
+      final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+      if (image != null) {
+        setState(() {
+          _selectedImage = image;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Foto tirada: ${image.name}')));
+      }
+    }
+
+  void addPerson() {
       showDialog(
         context: context,
         builder: (context) {
@@ -56,7 +86,7 @@ class BillDetailScreen extends ConsumerWidget {
                       people: [...bill.people, person],
                       products: bill.products,
                     );
-                    ref.read(billsProvider.notifier).updateBill(billIndex, updatedBill); // Atualizar a conta
+                    ref.read(billsProvider.notifier).updateBill(widget.billIndex, updatedBill); // Atualizar a conta
                     personNameController.clear();
                     Navigator.of(context).pop();
                   } else {
@@ -72,7 +102,7 @@ class BillDetailScreen extends ConsumerWidget {
       );
     }
 
-    void addProduct() {
+  void addProduct() {
       showDialog(
         context: context,
         builder: (context) {
@@ -130,7 +160,7 @@ class BillDetailScreen extends ConsumerWidget {
                       people: bill.people,
                       products: [...bill.products, product],
                     );
-                    ref.read(billsProvider.notifier).updateBill(billIndex, updatedBill); // Atualizar a conta
+                    ref.read(billsProvider.notifier).updateBill(widget.billIndex, updatedBill); // Atualizar a conta
                     productNameController.clear(); // Limpar campos
                     productPriceController.clear();
                     productQuantityController.clear();
@@ -174,7 +204,7 @@ class BillDetailScreen extends ConsumerWidget {
                           people: updatedPeople,
                           products: bill.products,
                         );
-                        ref.read(billsProvider.notifier).updateBill(billIndex, updatedBill);
+                        ref.read(billsProvider.notifier).updateBill(widget.billIndex, updatedBill);
                       },
                     ),
                   );
@@ -201,7 +231,7 @@ class BillDetailScreen extends ConsumerWidget {
                           people: bill.people,
                           products: updatedProducts,
                         );
-                        ref.read(billsProvider.notifier).updateBill(billIndex, updatedBill);
+                        ref.read(billsProvider.notifier).updateBill(widget.billIndex, updatedBill);
                       },
                     ),
                   );
@@ -209,6 +239,52 @@ class BillDetailScreen extends ConsumerWidget {
               ),
             ),
             AppButton(onPressed: addProduct, label: 'Adicionar Produto'),
+            const SizedBox(height: 12),
+            Text('Adicionar recibo(s)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    onPressed: _pickFromGallery,
+                    label: 'Galeria',
+                    icon: Icons.photo_library,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: AppButton(
+                    onPressed: _takePhoto,
+                    label: 'Tirar foto',
+                    icon: Icons.camera_alt,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (_selectedImage != null) ...[
+              Row(
+                children: [
+                  Expanded(child: Text('Arquivo: ${_selectedImage!.name}')),
+                  TextButton(
+                    onPressed: () async {
+                      // Alterar -> abrir opções: gallery
+                      await _pickFromGallery();
+                    },
+                    child: Text('Alterar'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _selectedImage = null;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Recibo apagado')));
+                    },
+                    child: Text('Apagar', style: TextStyle(color: Colors.red)),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 24),
             const Divider(),
             const SizedBox(height: 12),
@@ -223,7 +299,7 @@ class BillDetailScreen extends ConsumerWidget {
                   if (error == null) {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => BillDivisionScreen(billIndex: billIndex),
+                        builder: (context) => BillDivisionScreen(billIndex: widget.billIndex),
                       ),
                     );
                   } else {

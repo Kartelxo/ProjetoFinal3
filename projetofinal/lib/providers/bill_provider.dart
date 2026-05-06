@@ -10,8 +10,11 @@ class BillNotifier extends Notifier<List<Bill>> {
   }
 
   void updateBill(int index, Bill bill) {
-    state = [...state];
-    state[index] = bill;
+    final newState = [...state];
+    if (index >= 0 && index < newState.length) {
+      newState[index] = bill;
+      state = newState;
+    }
   }
 }
 
