@@ -6,6 +6,7 @@ import '../models/bill.dart';
 import '../widgets/appButton.dart';
 import '../providers/validation_provider.dart'; // Importar o novo provider de validação
 import '../providers/bill_provider.dart';
+import 'bill_division_screen.dart'; // Importar o novo ecrã
 
 class BillDetailScreen extends ConsumerWidget {
   final int billIndex;
@@ -72,10 +73,12 @@ class BillDetailScreen extends ConsumerWidget {
     }
 
     void addProduct() {
+      List<String> selectedPeople = [];
       showDialog(
         context: context,
         builder: (context) {
-          return AlertDialog(
+          return StatefulBuilder(builder: (context, setState) {
+            return AlertDialog(
             title: Text('Adicionar Produto'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -93,6 +96,30 @@ class BillDetailScreen extends ConsumerWidget {
                   controller: productQuantityController,
                   decoration: InputDecoration(labelText: 'Quantidade'),
                   keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 10),
+                const Text('Dividir com:', style: TextStyle(fontWeight: FontWeight.bold)),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 200),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: bill.people.map((person) {
+                        return CheckboxListTile(
+                          title: Text(person.name),
+                          value: selectedPeople.contains(person.name),
+                          onChanged: (bool? value) {
+                            setState(() {
+                              if (value == true) {
+                                selectedPeople.add(person.name);
+                              } else {
+                                selectedPeople.remove(person.name);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -119,7 +146,12 @@ class BillDetailScreen extends ConsumerWidget {
                   if (nameError == null && priceError == null && quantityError == null) {
                     double price = double.parse(priceText); // Já validado para ser um double
                     double quantity = double.parse(quantityText); // Já validado para ser um double
-                    Product product = Product(name: name, price: price, quantity: quantity);
+                    Product product = Product(
+                      name: name,
+                      price: price,
+                      quantity: quantity,
+                      personNames: selectedPeople,
+                    );
                     Bill updatedBill = Bill(
                       name: bill.name,
                       people: bill.people,
@@ -139,7 +171,7 @@ class BillDetailScreen extends ConsumerWidget {
                 child: Text('Adicionar'),
               ),
             ],
-          );
+          );});
         },
       );
     }
@@ -191,10 +223,11 @@ class BillDetailScreen extends ConsumerWidget {
                   final error = validateBill(bill);
 
                   if (error == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Conta validada com sucesso!'), backgroundColor: Colors.green),
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => BillDivisionScreen(billIndex: billIndex),
+                      ),
                     );
-                    // TODO: Navegar para o ecrã de resultados/divisão de despesas
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(error), backgroundColor: Colors.red),
