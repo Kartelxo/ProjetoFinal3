@@ -49,16 +49,33 @@ class Screen1 extends ConsumerWidget {
         children: [
           bills.isEmpty
               ? Center(child: Text('Nenhuma conta de compra adicionada ainda.'))
-              : ListView.builder(
+              : ListView.separated(
                   itemCount: bills.length,
+                  separatorBuilder: (_, __) => Divider(height: 1),
                   itemBuilder: (context, index) {
                     Bill bill = bills[index];
-                    return ListTile(
-                      title: Text(bill.name),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => BillDetailScreen(billIndex: index),
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                      child: Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => BillDetailScreen(billIndex: index),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+                            child: Row(
+                              children: [
+                                Expanded(child: Text(bill.name, style: TextStyle(fontSize: 16))),
+                                Icon(Icons.chevron_right, color: Colors.grey),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     );
