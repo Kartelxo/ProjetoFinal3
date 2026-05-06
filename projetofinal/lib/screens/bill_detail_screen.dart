@@ -4,6 +4,7 @@ import '../models/person.dart';
 import '../models/product.dart';
 import '../models/bill.dart';
 import '../widgets/appButton.dart';
+import '../providers/validation_provider.dart'; // Importar o novo provider de validação
 import '../providers/bill_provider.dart';
 
 class BillDetailScreen extends ConsumerWidget {
@@ -43,16 +44,23 @@ class BillDetailScreen extends ConsumerWidget {
               TextButton(
                 onPressed: () {
                   String name = personNameController.text.trim();
-                  if (name.isNotEmpty) {
+                  // Usar o provider de validação
+                  final validatePersonName = ref.read(personNameValidatorProvider);
+                  final nameError = validatePersonName(name);
+
+                  if (nameError == null) { // Se o nome for válido
                     Person person = Person(name: name);
                     Bill updatedBill = Bill(
                       name: bill.name,
                       people: [...bill.people, person],
                       products: bill.products,
                     );
-                    ref.read(billsProvider.notifier).updateBill(billIndex, updatedBill);
+                    ref.read(billsProvider.notifier).updateBill(billIndex, updatedBill); // Atualizar a conta
                     personNameController.clear();
                     Navigator.of(context).pop();
+                  } else {
+                    // Exibir mensagem de erro (ex: SnackBar)
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(nameError)));
                   }
                 },
                 child: Text('Adicionar'),
@@ -96,20 +104,36 @@ class BillDetailScreen extends ConsumerWidget {
               TextButton(
                 onPressed: () {
                   String name = productNameController.text.trim();
-                  double price = double.tryParse(productPriceController.text) ?? 0.0;
-                  double quantity = double.tryParse(productQuantityController.text) ?? 0.0;
-                  if (name.isNotEmpty) {
+                  String priceText = productPriceController.text.trim();
+                  String quantityText = productQuantityController.text.trim();
+
+                  // Usar os providers de validação
+                  final validateProductName = ref.read(productNameValidatorProvider);
+                  final validateProductPrice = ref.read(productPriceValidatorProvider);
+                  final validateProductQuantity = ref.read(productQuantityValidatorProvider);
+
+                  final nameError = validateProductName(name);
+                  final priceError = validateProductPrice(priceText);
+                  final quantityError = validateProductQuantity(quantityText);
+
+                  if (nameError == null && priceError == null && quantityError == null) {
+                    double price = double.parse(priceText); // Já validado para ser um double
+                    double quantity = double.parse(quantityText); // Já validado para ser um double
                     Product product = Product(name: name, price: price, quantity: quantity);
                     Bill updatedBill = Bill(
                       name: bill.name,
                       people: bill.people,
                       products: [...bill.products, product],
                     );
-                    ref.read(billsProvider.notifier).updateBill(billIndex, updatedBill);
-                    productNameController.clear();
+                    ref.read(billsProvider.notifier).updateBill(billIndex, updatedBill); // Atualizar a conta
+                    productNameController.clear(); // Limpar campos
                     productPriceController.clear();
                     productQuantityController.clear();
                     Navigator.of(context).pop();
+                  } else {
+                    // Exibir mensagens de erro combinadas
+                    String errorMessage = [nameError, priceError, quantityError].whereType<String>().join('\n');
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage)));
                   }
                 },
                 child: Text('Adicionar'),
