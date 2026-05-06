@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/bill.dart';
 
 /// Provider para validação do nome de uma pessoa.
 /// Retorna uma mensagem de erro (String) se inválido, ou null se válido.
@@ -7,6 +8,27 @@ final personNameValidatorProvider = Provider<String? Function(String)>(
     if (name.trim().isEmpty) {
       return 'O nome não pode estar vazio.';
     }
+    return null;
+  },
+);
+
+/// Provider para validação global da conta (Bill).
+/// Verifica se existem pelo menos 2 participantes, 1 produto e se os valores são válidos.
+final billValidatorProvider = Provider<String? Function(Bill)>(
+  (ref) => (Bill bill) {
+    if (bill.people.length < 2) {
+      return 'A conta deve ter pelo menos 2 participantes.';
+    }
+    if (bill.products.isEmpty) {
+      return 'Adicione pelo menos 1 produto à conta.';
+    }
+    for (final product in bill.products) {
+      if (product.price <= 0 || product.quantity <= 0) {
+        return 'Existem produtos com valores inválidos (devem ser maiores que zero).';
+      }
+    }
+    // Nota: Como os modelos usam tipos não nulos (double/String), 
+    // a verificação de "nulo" é garantida pela estrutura do código.
     return null;
   },
 );
