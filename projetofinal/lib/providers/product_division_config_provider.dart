@@ -36,6 +36,8 @@ class ProductDivisionConfigNotifier extends Notifier<Map<int, ProductDivisionCon
 
   /// Atualiza a configuração de divisão para um produto específico.
   void updateProductConfig(int productIndex, ProductDivisionConfig config) {
-    state = {...state, productIndex: config};
+    final newState = Map<int, ProductDivisionConfig>.from(state);
+    newState[productIndex] = config;
+    state = newState;
   }
 }

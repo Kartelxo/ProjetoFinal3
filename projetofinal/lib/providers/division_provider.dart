@@ -39,9 +39,9 @@ final productDivisionProvider = Provider<List<Map<String, dynamic>> Function(Bil
       String splitDescription = '';
 
       if (config.splitType == ProductSplitType.valueBased) {
-        final participants = product.personNames.isNotEmpty
-            ? product.personNames
-            : bill.people.map((e) => e.name).toList();
+        final participants = config.selectedParticipants.isNotEmpty
+            ? config.selectedParticipants.toList()
+            : (product.personNames.isNotEmpty ? product.personNames : bill.people.map((e) => e.name).toList());
         if (participants.isNotEmpty) {
           perPersonShareForDisplay = totalProductCost / participants.length;
           splitDescription = participants.join(', ');
@@ -88,10 +88,10 @@ final personTotalsProvider = Provider<Map<String, double> Function(Bill)>(
       final config = productConfigs[i] ?? ProductDivisionConfig();
       double pricePerUnit = product.price;
 
-      if (config.splitType == ProductSplitType.valueBased) {
-        final participants = product.personNames.isNotEmpty
-            ? product.personNames
-            : bill.people.map((e) => e.name).toList();
+        if (config.splitType == ProductSplitType.valueBased) {
+        final participants = config.selectedParticipants.isNotEmpty
+            ? config.selectedParticipants.toList()
+            : (product.personNames.isNotEmpty ? product.personNames : bill.people.map((e) => e.name).toList());
         
         if (participants.isEmpty) continue;
         

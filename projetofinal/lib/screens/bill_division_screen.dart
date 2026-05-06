@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/bill_provider.dart';
 import '../providers/division_provider.dart';
-import '../models/product_division_config.dart';
 import '../providers/product_division_config_provider.dart';
+import '../models/product_division_config.dart';
+
 class BillDivisionScreen extends ConsumerWidget {
   final int billIndex;
 
@@ -13,157 +14,161 @@ class BillDivisionScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final bill = ref.watch(billsProvider)[billIndex];
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(productDivisionConfigProvider.notifier).initializeConfig(bill);
-    });
-
     final totalAmount = ref.watch(billTotalProvider)(bill);
     final productBreakdown = ref.watch(productDivisionProvider)(bill);
     final personTotals = ref.watch(personTotalsProvider)(bill);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Divisão da Conta')),
+      appBar: AppBar(title: Text('Divisão da Conta - ${bill.name}')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Card(
-              color: Colors.blue.shade50,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    _buildSummaryRow('Total Geral:', '€${totalAmount.toStringAsFixed(2)}', isBold: true),
-                    const Divider(),
-                    const Text('Resumo por Pessoa:', style: TextStyle(fontWeight: FontWeight.bold)),
-                    ...personTotals.entries.map((entry) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2.0),
-                      child: _buildSummaryRow(entry.key, '€${entry.value.toStringAsFixed(2)}'),
-                    )).toList(),
-                  ],
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Card(
+                color: Colors.blue.shade50,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      _buildSummaryRow('Total Geral:', '€${totalAmount.toStringAsFixed(2)}', isBold: true),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 24),
-            const Text('Divisão por Produto:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            Expanded(
-              child: ListView.builder(
-                itemCount: bill.products.length, // Iterate through actual products
-                itemBuilder: (context, index) {
-                  final product = bill.products[index];
-                  final itemBreakdown = productBreakdown.firstWhere(
-                    (element) => element['name'] == product.name, // Ainda usa o nome para a exibição do breakdown
-                    orElse: () => <String, dynamic>{'total': 0.0, 'perPerson': 0.0, 'splitBetween': 'Carregando...'},
-                  );
-                  final productConfig = ref.watch(productDivisionConfigProvider)[index] ?? ProductDivisionConfig();
-                  return ExpansionTile(
-                    title: Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(
-                      'Total: €${itemBreakdown['total'].toStringAsFixed(2)}\n'
-                      'Dividido por: ${itemBreakdown['splitBetween']}',
-                    ),
-                    trailing: productConfig.splitType == ProductSplitType.valueBased 
-                        ? Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text('€${itemBreakdown['perPerson'].toStringAsFixed(2)}',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
-                              const Text('por pessoa', style: TextStyle(fontSize: 10)),
-                            ],
-                          )
-                        : null, // No simple 'per person' for quantity based in trailing
+              const SizedBox(height: 12),
+              const Text('Produtos', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              ...productBreakdown.asMap().entries.map((entry) {
+                final index = entry.key;
+                final p = entry.value;
+                final total = (p['total'] ?? 0.0) as double;
+                final perPerson = (p['perPerson'] ?? 0.0) as double;
+                final splitBetween = p['splitBetween'] ?? '';
+                return Card(
+                  child: ExpansionTile(
+                    title: Text(p['name'] ?? ''),
+                    subtitle: Text('Total: € ${total.toStringAsFixed(2)} • Quantidade: ${bill.products[index].quantity.toStringAsFixed(0)}'),
                     children: [
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            ElevatedButton(
-                              onPressed: () {
-                                ref.read(productDivisionConfigProvider.notifier).updateProductConfig(
-                                  index,
-                                  productConfig.copyWith(
-                                    splitType: ProductSplitType.valueBased,
-                                    assignedQuantities: {},
-                                  ),
+                            Text('Dividido entre: $splitBetween'),
+                            const SizedBox(height: 8),
+                            Row(children: [
+                              const Text('Tipo de divisão: '),
+                              const SizedBox(width: 8),
+                              Consumer(builder: (context, ref, _) {
+                                final config = ref.watch(productDivisionConfigProvider)[index] ?? ProductDivisionConfig();
+                                return DropdownButton<ProductSplitType>(
+                                  value: config.splitType,
+                                  items: ProductSplitType.values
+                                      .map((t) => DropdownMenuItem(value: t, child: Text(t.name)))
+                                      .toList(),
+                                  onChanged: (t) {
+                                    if (t == null) return;
+                                    final newConfig = config.copyWith(splitType: t);
+                                    ref.read(productDivisionConfigProvider.notifier).updateProductConfig(index, newConfig);
+                                  },
                                 );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: productConfig.splitType == ProductSplitType.valueBased
-                                    ? Colors.blue
-                                    : Colors.grey,
-                              ),
-                              child: const Text('Dividir Valor', style: TextStyle(color: Colors.white)),
-                            ),
-                            ElevatedButton(
-                              onPressed: () {
-                                final initialAssignedQuantities = <String, double>{};
-                                for (var person in bill.people) {
-                                  initialAssignedQuantities[person.name] = 0.0;
-                                }
-                                ref.read(productDivisionConfigProvider.notifier).updateProductConfig(
-                                  index,
-                                  productConfig.copyWith(
-                                    splitType: ProductSplitType.quantityBased,
-                                    assignedQuantities: initialAssignedQuantities,
-                                  ),
+                              }),
+                            ]),
+                            const SizedBox(height: 8),
+                            Consumer(builder: (context, ref, _) {
+                              final config = ref.watch(productDivisionConfigProvider)[index] ?? ProductDivisionConfig();
+                              if (config.splitType == ProductSplitType.valueBased) {
+                                return Column(
+                                  children: bill.people.map((person) {
+                                    final selected = config.selectedParticipants.contains(person.name);
+                                    return CheckboxListTile(
+                                      title: Text(person.name),
+                                      value: selected,
+                                      onChanged: (v) {
+                                        final updatedSet = Set<String>.from(config.selectedParticipants);
+                                        if (v == true) {
+                                          updatedSet.add(person.name);
+                                        } else {
+                                          updatedSet.remove(person.name);
+                                        }
+                                        final updated = config.copyWith(selectedParticipants: updatedSet);
+                                        ref.read(productDivisionConfigProvider.notifier).updateProductConfig(index, updated);
+                                      },
+                                      controlAffinity: ListTileControlAffinity.leading,
+                                    );
+                                  }).toList(),
                                 );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: productConfig.splitType == ProductSplitType.quantityBased
-                                    ? Colors.blue
-                                    : Colors.grey,
-                              ),
-                              child: const Text('Dividir Quantidade', style: TextStyle(color: Colors.white)),
-                            ),
+                              }
+
+                              // quantityBased
+                              return Column(
+                                children: bill.people.map((person) {
+                                  final currentQty = config.assignedQuantities[person.name] ?? 0.0;
+                                  // total assigned by others
+                                  final totalAssignedExceptCurrent = config.assignedQuantities.entries
+                                      .where((e) => e.key != person.name)
+                                      .fold<double>(0.0, (sum, e) => sum + e.value);
+                                  final productQuantity = bill.products[index].quantity.toInt();
+                                  int maxAllowed = (productQuantity - totalAssignedExceptCurrent.toInt());
+                                  if (maxAllowed < 0) maxAllowed = 0;
+                                  int currentInt = currentQty.toInt();
+                                  if (currentInt > maxAllowed) currentInt = maxAllowed;
+
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                    child: Row(
+                                      children: [
+                                        Expanded(child: Text(person.name)),
+                                        SizedBox(
+                                          width: 100,
+                                          child: DropdownButton<int>(
+                                            isExpanded: true,
+                                            value: currentInt,
+                                            items: List<DropdownMenuItem<int>>.generate(
+                                              maxAllowed + 1,
+                                              (i) => DropdownMenuItem(value: i, child: Center(child: Text(i.toString()))),
+                                            ),
+                                            onChanged: (v) {
+                                              if (v == null) return;
+                                              // safety: ensure sum doesn't exceed product.quantity
+                                              final newTotal = totalAssignedExceptCurrent + v;
+                                              if (newTotal > productQuantity) {
+                                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('A soma das unidades não pode exceder ${productQuantity}')));
+                                                return;
+                                              }
+                                              final updated = Map<String, double>.from(config.assignedQuantities);
+                                              updated[person.name] = v.toDouble();
+                                              ref.read(productDivisionConfigProvider.notifier).updateProductConfig(index, config.copyWith(assignedQuantities: updated));
+                                            },
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        const Text('un.'),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                              );
+                            }),
+                            const SizedBox(height: 8),
+                            Align(alignment: Alignment.centerRight, child: Text('Parte por pessoa: € ${perPerson.toStringAsFixed(2)}')),
                           ],
                         ),
                       ),
-                      if (productConfig.splitType == ProductSplitType.quantityBased)
-                        ...bill.people.map((person) {
-                          final currentQty = productConfig.assignedQuantities[person.name] ?? 0.0;
-                          
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-                            child: Row(
-                              children: [
-                                Expanded(child: Text(person.name)),
-                                SizedBox(
-                                  width: 80,
-                                  child: TextFormField(
-                                    initialValue: currentQty > 0 ? currentQty.toStringAsFixed(0) : '0',
-                                    keyboardType: TextInputType.number,
-                                    textAlign: TextAlign.center,
-                                    decoration: const InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      isDense: true,
-                                      contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                                    ),
-                                    onChanged: (value) {
-                                      final newQty = double.tryParse(value) ?? 0.0;
-                                      final updatedAssignedQuantities = Map<String, double>.from(productConfig.assignedQuantities);
-                                      updatedAssignedQuantities[person.name] = newQty;
-                                      ref.read(productDivisionConfigProvider.notifier).updateProductConfig(
-                                        index,
-                                        productConfig.copyWith(assignedQuantities: updatedAssignedQuantities),
-                                      );
-                                    },
-                                  ),
-                                ),
-                                const Text(' un.'),
-                              ],
-                            ),
-                          );
-                        }).toList(),
                     ],
-                  );
-                },
-              ),
-            ),
-          ],
+                  ),
+                );
+              }).toList(),
+              const SizedBox(height: 12),
+              const Text('Totais por Pessoa', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              ...personTotals.entries.map((e) {
+                return ListTile(title: Text(e.key), trailing: Text('€ ${e.value.toStringAsFixed(2)}'));
+              }).toList(),
+            ],
+          ),
         ),
       ),
     );

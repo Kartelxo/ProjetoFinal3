@@ -73,12 +73,10 @@ class BillDetailScreen extends ConsumerWidget {
     }
 
     void addProduct() {
-      List<String> selectedPeople = [];
       showDialog(
         context: context,
         builder: (context) {
-          return StatefulBuilder(builder: (context, setState) {
-            return AlertDialog(
+          return AlertDialog(
             title: Text('Adicionar Produto'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -96,30 +94,6 @@ class BillDetailScreen extends ConsumerWidget {
                   controller: productQuantityController,
                   decoration: InputDecoration(labelText: 'Quantidade'),
                   keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 10),
-                const Text('Dividir com:', style: TextStyle(fontWeight: FontWeight.bold)),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 200),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: bill.people.map((person) {
-                        return CheckboxListTile(
-                          title: Text(person.name),
-                          value: selectedPeople.contains(person.name),
-                          onChanged: (bool? value) {
-                            setState(() {
-                              if (value == true) {
-                                selectedPeople.add(person.name);
-                              } else {
-                                selectedPeople.remove(person.name);
-                              }
-                            });
-                          },
-                        );
-                      }).toList(),
-                    ),
-                  ),
                 ),
               ],
             ),
@@ -150,7 +124,6 @@ class BillDetailScreen extends ConsumerWidget {
                       name: name,
                       price: price,
                       quantity: quantity,
-                      personNames: selectedPeople,
                     );
                     Bill updatedBill = Bill(
                       name: bill.name,
@@ -171,7 +144,7 @@ class BillDetailScreen extends ConsumerWidget {
                 child: Text('Adicionar'),
               ),
             ],
-          );});
+          );
         },
       );
     }
