@@ -12,14 +12,10 @@ class ResultScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final bill = ref.watch(billsProvider)[billIndex];
-    final totalAmount = ref.watch(billTotalProvider)(bill);
-    final productBreakdown = ref.watch(productDivisionProvider)(bill);
-    final personTotals = ref.watch(personTotalsProvider)(bill);
+    final total = ref.watch(billTotalProvider)(bill);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Resumo Final: ${bill.name}'),
-      ),
+      appBar: AppBar(title: Text('Resumo Final: ${bill.name}')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -35,7 +31,7 @@ class ResultScreen extends ConsumerWidget {
                   children: [
                     const Text('Conta Final', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
                     Text(
-                      '€ ${totalAmount.toStringAsFixed(2)}',
+                      '€ ${total.toStringAsFixed(2)}',
                       style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue),
                     ),
                   ],
@@ -45,7 +41,7 @@ class ResultScreen extends ConsumerWidget {
             const SizedBox(height: 24),
             const Text('Totais por Pessoa', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const Divider(),
-            ...personTotals.entries.map((e) => ListTile(
+            ...ref.watch(personTotalsProvider)(bill).entries.map((e) => ListTile(
                   title: Text(e.key),
                   trailing: Text(
                     '€ ${e.value.toStringAsFixed(2)}',
@@ -55,7 +51,7 @@ class ResultScreen extends ConsumerWidget {
             const SizedBox(height: 24),
             const Text('Divisão de Produtos', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const Divider(),
-            ...productBreakdown.map((p) => Card(
+            ...ref.watch(productDivisionProvider)(bill).map((p) => Card(
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   child: ListTile(
                     title: Text(p['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -75,24 +71,34 @@ class ResultScreen extends ConsumerWidget {
                 )),
             if (bill.imagePath != null) ...[
               const SizedBox(height: 24),
-              const Text('Recibo Capturado', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const Divider(),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.file(
-                  File(bill.imagePath!),
-                  width: double.infinity,
-                  height: 300,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => const Text('Erro ao carregar imagem'),
-                ),
-              ),
+              _ImageCard(imagePath: bill.imagePath!),
             ],
             const SizedBox(height: 32),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ImageCard extends StatelessWidget {
+  final String imagePath;
+  const _ImageCard({required this.imagePath});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Recibo Capturado', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const Divider(),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.file(File(imagePath), width: double.infinity, height: 300, fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => const Center(child: Text('Erro ao carregar imagem'))),
+        ),
+      ],
     );
   }
 }

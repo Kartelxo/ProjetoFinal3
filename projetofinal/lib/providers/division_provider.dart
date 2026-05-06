@@ -4,14 +4,8 @@ import '../models/product_division_config.dart';
 import 'product_division_config_provider.dart';
 
 /// Provider que calcula o valor total acumulado dos produtos na conta.
-final billTotalProvider = Provider<double Function(Bill)>(
-  (ref) => (Bill bill) {
-    return bill.products.fold(
-      0.0,
-      (previousValue, product) => previousValue + (product.price * product.quantity),
-    );
-  },
-);
+final billTotalProvider = Provider<double Function(Bill)>((ref) => 
+  (bill) => bill.products.fold(0.0, (sum, p) => sum + (p.price * p.quantity)));
 
 /// Provider que calcula quanto cada pessoa deve pagar.
 /// Divide o total pelo número de participantes.
@@ -61,13 +55,12 @@ final productDivisionProvider = Provider<List<Map<String, dynamic>> Function(Bil
         }
       }
 
-      return <String, dynamic>{
+      return {
         'name': product.name,
         'total': totalProductCost,
         'perPerson': perPersonShareForDisplay,
         'splitBetween': splitDescription,
         'splitType': config.splitType.name,
-        'assignedQuantities': config.assignedQuantities,
       };
     }).toList();
   },

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/bill.dart';
-import '../widgets/appButton.dart';
 import '../providers/bill_provider.dart';
 import 'bill_detail_screen.dart';
 
@@ -9,7 +8,7 @@ class Screen1 extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final bills = ref.watch(billsProvider);
-    final billNameController = TextEditingController();
+    final controller = TextEditingController();
 
     void addBill() {
       showDialog(
@@ -17,10 +16,7 @@ class Screen1 extends ConsumerWidget {
         builder: (context) {
           return AlertDialog(
             title: Text('Adicionar Conta'),
-            content: TextField(
-              controller: billNameController,
-              decoration: InputDecoration(labelText: 'Nome da Conta'),
-            ),
+            content: TextField(controller: controller, decoration: InputDecoration(labelText: 'Nome da Conta')),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
@@ -28,10 +24,10 @@ class Screen1 extends ConsumerWidget {
               ),
               TextButton(
                 onPressed: () {
-                  String name = billNameController.text.trim();
+                  String name = controller.text.trim();
                   if (name.isNotEmpty) {
                     ref.read(billsProvider.notifier).addBill(Bill(name: name));
-                    billNameController.clear();
+                    controller.clear();
                     Navigator.of(context).pop();
                   }
                 },
@@ -45,11 +41,9 @@ class Screen1 extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text('Contas de Compras')),
-      body: Stack(
-        children: [
-          bills.isEmpty
-              ? Center(child: Text('Nenhuma conta de compra adicionada ainda.'))
-              : ListView.separated(
+      body: bills.isEmpty
+          ? Center(child: Text('Nenhuma conta de compra adicionada ainda.'))
+          : ListView.separated(
                   itemCount: bills.length,
                   separatorBuilder: (_, __) => Divider(height: 1),
                   itemBuilder: (context, index) {
@@ -61,12 +55,7 @@ class Screen1 extends ConsumerWidget {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(8),
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => BillDetailScreen(billIndex: index),
-                            ),
-                          ),
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => BillDetailScreen(billIndex: index))),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
                             child: Row(
@@ -81,13 +70,7 @@ class Screen1 extends ConsumerWidget {
                     );
                   },
                 ),
-          Positioned(
-            bottom: 16.0,
-            right: 16.0,
-            child: AppButton(onPressed: addBill, label: 'Adicionar Conta'),
-          ),
-        ],
-      ),
+      floatingActionButton: FloatingActionButton.extended(onPressed: addBill, label: Text('Nova Conta'), icon: Icon(Icons.add)),
     );
   }
 }

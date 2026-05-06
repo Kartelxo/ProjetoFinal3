@@ -5,16 +5,10 @@ class BillNotifier extends Notifier<List<Bill>> {
   @override
   List<Bill> build() => [];
 
-  void addBill(Bill bill) {
-    state = [...state, bill];
-  }
+  void addBill(Bill bill) => state = [...state, bill];
 
   void updateBill(int index, Bill bill) {
-    final newState = [...state];
-    if (index >= 0 && index < newState.length) {
-      newState[index] = bill;
-      state = newState;
-    }
+    state = [for (int i = 0; i < state.length; i++) i == index ? bill : state[i]];
   }
 }
 

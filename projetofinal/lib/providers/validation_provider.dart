@@ -3,14 +3,8 @@ import '../models/bill.dart';
 
 /// Provider para validação do nome de uma pessoa.
 /// Retorna uma mensagem de erro (String) se inválido, ou null se válido.
-final personNameValidatorProvider = Provider<String? Function(String)>(
-  (ref) => (String name) {
-    if (name.trim().isEmpty) {
-      return 'O nome não pode estar vazio.';
-    }
-    return null;
-  },
-);
+final personNameValidatorProvider = Provider<String? Function(String)>((ref) => 
+  (name) => name.trim().isEmpty ? 'O nome não pode estar vazio.' : null);
 
 /// Provider para validação global da conta (Bill).
 /// Verifica se existem pelo menos 2 participantes, 1 produto e se os valores são válidos.
@@ -35,14 +29,8 @@ final billValidatorProvider = Provider<String? Function(Bill)>(
 
 /// Provider para validação do nome de um produto.
 /// Retorna uma mensagem de erro (String) se inválido, ou null se válido.
-final productNameValidatorProvider = Provider<String? Function(String)>(
-  (ref) => (String name) {
-    if (name.trim().isEmpty) {
-      return 'O nome do produto não pode estar vazio.';
-    }
-    return null;
-  },
-);
+final productNameValidatorProvider = Provider<String? Function(String)>((ref) => 
+  (name) => name.trim().isEmpty ? 'O nome do produto não pode estar vazio.' : null);
 
 /// Provider para validação do preço de um produto.
 /// Retorna uma mensagem de erro (String) se inválido, ou null se válido.
