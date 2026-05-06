@@ -5,8 +5,9 @@ class Bill {
   final String name;
   final List<Person> people;
   final List<Product> products;
+  final String? imagePath;
 
-  Bill({required this.name, List<Person>? people, List<Product>? products})
+  Bill({required this.name, List<Person>? people, List<Product>? products, this.imagePath})
       : people = people ?? [],
         products = products ?? [];
 }

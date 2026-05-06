@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/bill_provider.dart';
 import '../providers/division_provider.dart';
@@ -72,6 +73,22 @@ class ResultScreen extends ConsumerWidget {
                     ),
                   ),
                 )),
+            if (bill.imagePath != null) ...[
+              const SizedBox(height: 24),
+              const Text('Recibo Capturado', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Divider(),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.file(
+                  File(bill.imagePath!),
+                  width: double.infinity,
+                  height: 300,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => const Text('Erro ao carregar imagem'),
+                ),
+              ),
+            ],
             const SizedBox(height: 32),
           ],
         ),

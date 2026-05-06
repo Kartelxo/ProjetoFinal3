@@ -19,8 +19,6 @@ class BillDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
-  XFile? _selectedImage;
-
   @override
   Widget build(BuildContext context) {
     final ref = this.ref;
@@ -35,9 +33,13 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
     Future<void> _pickFromGallery() async {
       final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
       if (image != null) {
-        setState(() {
-          _selectedImage = image;
-        });
+        final updatedBill = Bill(
+          name: bill.name,
+          people: bill.people,
+          products: bill.products,
+          imagePath: image.path,
+        );
+        ref.read(billsProvider.notifier).updateBill(widget.billIndex, updatedBill);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Imagem selecionada: ${image.name}')));
       }
     }
@@ -45,9 +47,13 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
     Future<void> _takePhoto() async {
       final XFile? image = await _picker.pickImage(source: ImageSource.camera);
       if (image != null) {
-        setState(() {
-          _selectedImage = image;
-        });
+        final updatedBill = Bill(
+          name: bill.name,
+          people: bill.people,
+          products: bill.products,
+          imagePath: image.path,
+        );
+        ref.read(billsProvider.notifier).updateBill(widget.billIndex, updatedBill);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Foto tirada: ${image.name}')));
       }
     }
@@ -85,6 +91,7 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
                       name: bill.name,
                       people: [...bill.people, person],
                       products: bill.products,
+                      imagePath: bill.imagePath,
                     );
                     ref.read(billsProvider.notifier).updateBill(widget.billIndex, updatedBill); // Atualizar a conta
                     personNameController.clear();
@@ -159,6 +166,7 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
                       name: bill.name,
                       people: bill.people,
                       products: [...bill.products, product],
+                      imagePath: bill.imagePath,
                     );
                     ref.read(billsProvider.notifier).updateBill(widget.billIndex, updatedBill); // Atualizar a conta
                     productNameController.clear(); // Limpar campos
@@ -203,6 +211,7 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
                           name: bill.name,
                           people: updatedPeople,
                           products: bill.products,
+                          imagePath: bill.imagePath,
                         );
                         ref.read(billsProvider.notifier).updateBill(widget.billIndex, updatedBill);
                       },
@@ -230,6 +239,7 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
                           name: bill.name,
                           people: bill.people,
                           products: updatedProducts,
+                          imagePath: bill.imagePath,
                         );
                         ref.read(billsProvider.notifier).updateBill(widget.billIndex, updatedBill);
                       },
@@ -262,10 +272,10 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            if (_selectedImage != null) ...[
+            if (bill.imagePath != null) ...[
               Row(
                 children: [
-                  Expanded(child: Text('Arquivo: ${_selectedImage!.name}')),
+                  Expanded(child: Text('Arquivo: ${bill.imagePath!.split('/').last}')),
                   TextButton(
                     onPressed: () async {
                       // Alterar -> abrir opções: gallery
@@ -275,9 +285,13 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
                   ),
                   TextButton(
                     onPressed: () {
-                      setState(() {
-                        _selectedImage = null;
-                      });
+                      final updatedBill = Bill(
+                        name: bill.name,
+                        people: bill.people,
+                        products: bill.products,
+                        imagePath: null,
+                      );
+                      ref.read(billsProvider.notifier).updateBill(widget.billIndex, updatedBill);
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Recibo apagado')));
                     },
                     child: Text('Apagar', style: TextStyle(color: Colors.red)),
